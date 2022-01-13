@@ -1,6 +1,7 @@
 using EagleSabi.Coordinator.Domain.Context.Round.Enums;
 using EagleSabi.Coordinator.Domain.Context.Round.Records;
 using EagleSabi.Infrastructure.Common.Abstractions.EventSourcing.Models;
+using WalletWasabi.WabiSabi.Models.MultipartyTransaction;
 
 namespace EagleSabi.Coordinator.Domain.Context.Round;
 
@@ -22,7 +23,25 @@ public class RoundAggregate : IAggregate
 
     public void Apply(RoundStartedEvent ev)
     {
-        State = State with { RoundParameters = ev.RoundParameters, Phase = PhaseEnum.InputRegistration };
+        State = State with
+        {
+            RoundParameters = ev.RoundParameters,
+            MultipartyTransactionState = new ConstructionState(ev.RoundParameters.MultipartyTransactionParameters),
+            Phase = PhaseEnum.InputRegistration,
+        };
+    }
+
+    public void Apply(AllInputsAllowedEvent ev)
+    {
+        State = State with { AllowedInputs = null };
+    }
+
+    public void Apply(SpecificInputsAllowedEvent ev)
+    {
+        State = State with
+        {
+            AllowedInputs = State.AllowedInputs?.Union(ev.AllowedEvents)
+        };
     }
 
     public void Apply(InputRegisteredEvent ev)

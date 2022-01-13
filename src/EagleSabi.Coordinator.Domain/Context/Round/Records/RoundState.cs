@@ -11,11 +11,19 @@ namespace EagleSabi.Coordinator.Domain.Context.Round.Records;
 public record RoundState : IState
 {
     public RoundParameters? RoundParameters { get; init; } = default;
+    public MultipartyTransactionState? MultipartyTransactionState { get; init; } = default;
     public ImmutableList<InputState> Inputs { get; init; } = ImmutableList<InputState>.Empty;
     public ImmutableList<OutputState> Outputs { get; init; } = ImmutableList<OutputState>.Empty;
     public PhaseEnum Phase { get; init; } = PhaseEnum.New;
     public uint256 Id => RoundParameters?.Id ?? uint256.Zero;
     public bool Succeeded { get; init; } = false;
+    public ImmutableSortedSet<OutPoint>? AllowedInputs { get; init; } = ImmutableSortedSet<OutPoint>.Empty;
+    public bool IsInputAllowed(OutPoint outpoint)
+        => AllowedInputs switch
+        {
+            not null => AllowedInputs.Contains(outpoint),
+            _ => true,
+        };
 }
 
 public record InputState(
@@ -42,7 +50,7 @@ public record RoundParameters(
     long MaxAmountCredentialValue,
     long MaxVsizeCredentialValue,
     long MaxVsizeAllocationPerAlice,
-    MultipartyTransactionParameters MultipartyTransactionParameters
+    MultipartyTransactionParameters MultipartyTransactionParameters,
 )
 {
     public uint256 BlameOf { get; init; } = uint256.Zero;
